@@ -187,3 +187,10 @@ class SignalRunning(Enum):
     Owner = "threadWrite"
     msgID = 2
     msgType = "Boolean"
+    
+#################################    From Socket  ##################################
+class LaneDetect(Enum):
+    Queue = "General"
+    Owner = "threadSocketMsg"
+    msgID = 1
+    msgType = "dictionary"
