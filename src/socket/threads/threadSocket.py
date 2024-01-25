@@ -3,11 +3,6 @@ from multiprocessing import Pipe
 
 from src.templates.threadwithstop import ThreadWithStop
 from src.utils.messages.allMessages import (
-    mainCamera,
-    serialCamera,
-    Recording,
-    Record,
-    Config,
     LaneDetect
 )
 class threadClientSocket(ThreadWithStop):
@@ -38,9 +33,16 @@ class threadClientSocket(ThreadWithStop):
         while self._running:
             try:
                 data = self.client_socket.recv(1024).decode("utf-8").strip()
-                print(data)
-                if data == "quit":
-                    self.stop()
+                self.queueList["Critical"].put(
+                    {
+                        "Owner": LaneDetect.Owner,
+                        "msgID": LaneDetect.msgID,
+                        "msgType": LaneDetect.msgType,
+                        "msgValue": data
+                    }
+                )
+                if self.debugger:
+                    print(data)
             except ConnectionResetError:
                 break
         pass

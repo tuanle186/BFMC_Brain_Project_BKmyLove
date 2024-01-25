@@ -36,7 +36,7 @@ import logging
 
 # ===================================== PROCESS IMPORTS ==================================
 from src.gateway.processGateway import processGateway
-from src.hardware.camera.processCamera import processCamera
+# from src.hardware.camera.processCamera import processCamera
 from src.hardware.serialhandler.processSerialHandler import processSerialHandler
 from src.utils.PCcommunicationDemo.processPCcommunication import (
     processPCCommunicationDemo,
@@ -48,7 +48,7 @@ from src.data.CarsAndSemaphores.processCarsAndSemaphores import processCarsAndSe
 from src.data.TrafficCommunication.processTrafficCommunication import (
     processTrafficCommunication,
 )
-
+from src.socket.processSocket import processRecvSocket
 # ======================================== SETTING UP ====================================
 allProcesses = list()
 queueList = {
@@ -60,11 +60,12 @@ queueList = {
 
 logging = logging.getLogger()
 
-TrafficCommunication = True
-Camera = True
+TrafficCommunication = False
+Camera = False
 PCCommunicationDemo = True
 CarsAndSemaphores = True
-SerialHandler = True
+SerialHandler = False
+Socket = True
 # ===================================== SETUP PROCESSES ==================================
 
 # Initializing gateway
@@ -100,6 +101,11 @@ if TrafficCommunication:
 if SerialHandler:
     processSerialHandler = processSerialHandler(queueList, logging)
     allProcesses.append(processSerialHandler)
+
+# Initializing socket
+if Socket:
+    processRecvSocket = processRecvSocket(queueList, logging)
+    allProcesses.append(processRecvSocket)
 
 # ===================================== START PROCESSES ==================================
 for process in allProcesses:

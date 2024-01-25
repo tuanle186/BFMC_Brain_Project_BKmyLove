@@ -32,7 +32,7 @@ if __name__ == "__main__":
     sys.path.insert(0, "../..")
 
 from src.templates.workerprocess import WorkerProcess
-from src.socket.theads.threadSocket import threadClientSocket
+from src.socket.threads.threadSocket import threadClientSocket
 from multiprocessing import Pipe
 
 class processRecvSocket(WorkerProcess):
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     process.daemon = True
     process.start()
 
-    time.sleep(1)
+    time.sleep(20)
     #TODO#p
     # print("Runing")
 

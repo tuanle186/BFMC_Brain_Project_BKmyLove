@@ -190,7 +190,7 @@ class SignalRunning(Enum):
     
 #################################    From Socket  ##################################
 class LaneDetect(Enum):
-    Queue = "General"
-    Owner = "threadSocketMsg"
+    Queue = "Critical"
+    Owner = "threadSocket"
     msgID = 1
     msgType = "dictionary"
