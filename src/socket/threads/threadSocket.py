@@ -12,22 +12,11 @@ class threadClientSocket(ThreadWithStop):
         self.logger = logger
         self.debugger = debugger
         self._init_socket()
-
-        # self.Queue_Sending()
-        # self.Configs()
-
-        
-    
-    def subscribe(self, message):
-        """This functin will add the pipe into the approved messages list and it will be added into the dictionary of sending
-        Args:
-            message(dictionary): Dictionary received from the multiprocessing queues ( the config one).
-        """
-        pass
         
 
     def client_send(self):
         pass
+
 
     def client_recv(self):
         while self._running:
@@ -35,17 +24,16 @@ class threadClientSocket(ThreadWithStop):
                 data = self.client_socket.recv(1024).decode("utf-8").strip()
                 self.queueList["Critical"].put(
                     {
-                        "Owner": LaneDetect.Owner,
-                        "msgID": LaneDetect.msgID,
-                        "msgType": LaneDetect.msgType,
-                        "msgValue": data
+                        "Owner": LaneDetect.Owner.value,
+                        "msgID": LaneDetect.msgID.value,
+                        "msgType": LaneDetect.msgType.value,
+                        "msgValue": data,
                     }
                 )
-                if self.debugger:
-                    print(data)
+                # print(data)
             except ConnectionResetError:
                 break
-        pass
+
 
     def _init_socket(self, server_ip='localhost', server_port = 12345):
         '''This function will init the socket, connect to the server ip camera, recv msg from server ip camera then pass it to process gateway'''
@@ -59,6 +47,7 @@ class threadClientSocket(ThreadWithStop):
         self.client_socket.connect((self.server_ip, self.server_port))
         self.client_recv()
         super(threadClientSocket,self).start()
+
 
     # =============================== STOP ================================================
     def stop(self):

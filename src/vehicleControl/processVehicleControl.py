@@ -7,11 +7,15 @@ if __name__ == "__main__":
 
     sys.path.insert(0, "../..")
 from src.templates.workerprocess import WorkerProcess
-from src.vehicleControl.threads.threadVehicleControl import threadVehicleControl
+from src.vehicleControl.threads.threadVehicleControl import ThreadVehicleControl
 from multiprocessing import Pipe
 
 class processVehicleControl(WorkerProcess):
-    """
+    """This process handle the Vehicle Control.\n
+    Args:
+        QueueList (dictionary of multiprocessing.queues.Queue): Dictionar of queues where the ID is the type of messages.
+        logging (logging object): Made for debugging.
+        debugging (bool, optional): A flag for debugging. Defaults to False.
     """
 
     def __init__(self, queueList, logging, debugging=False):
@@ -40,7 +44,9 @@ class processVehicleControl(WorkerProcess):
     # ===================================== INIT TH ==========================================
     def _init_threads(self):
         """Initializes the gateway thread."""
-        vehicleControlThread = threadVehicleControl(self.queuesList, self.logger, self.debugging)
+        vehicleControlThread = ThreadVehicleControl(
+            self.pipeRecv, self.pipeSend, self.queuesList, self.logging, self.debugging
+        )
         self.threads.append(vehicleControlThread)
 
 
@@ -49,4 +55,22 @@ class processVehicleControl(WorkerProcess):
 #                  in terminal:    python3 processVehicleControl.py
 
 if __name__ == "__main__":
-    print("Hello world!")
+    from multiprocessing import Queue, Event
+    import logging
+    import time
+    allProcesses = list()
+    debugg = False
+
+    queueList = {
+        "Critical": Queue(),
+        "Warning": Queue(),
+        "General": Queue(),
+        "Config": Queue(),
+    }
+    pipeRecv, pipeSend = Pipe(duplex=False)
+    logger = logging.getLogger()
+    process = processVehicleControl(queueList, logger, debugg)
+    process.daemon = True
+    process.start()
+    time.sleep(20)
+    process.stop

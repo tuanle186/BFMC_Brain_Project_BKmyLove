@@ -49,6 +49,7 @@ from src.data.TrafficCommunication.processTrafficCommunication import (
     processTrafficCommunication,
 )
 from src.socket.processSocket import processRecvSocket
+from src.vehicleControl.processVehicleControl import processVehicleControl
 # ======================================== SETTING UP ====================================
 allProcesses = list()
 queueList = {
@@ -66,6 +67,7 @@ PCCommunicationDemo = True
 CarsAndSemaphores = True
 SerialHandler = False
 Socket = True
+VehicleControl = True
 # ===================================== SETUP PROCESSES ==================================
 
 # Initializing gateway
@@ -104,8 +106,13 @@ if SerialHandler:
 
 # Initializing socket
 if Socket:
-    processRecvSocket = processRecvSocket(queueList, logging)
+    processRecvSocket = processRecvSocket(queueList, logging, True)
     allProcesses.append(processRecvSocket)
+
+# Initializing Vehicle Control
+if VehicleControl:
+    processVehicleControl = processVehicleControl(queueList, logging)
+    allProcesses.append(processVehicleControl)
 
 # ===================================== START PROCESSES ==================================
 for process in allProcesses:
