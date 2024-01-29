@@ -36,7 +36,7 @@ import logging
 
 # ===================================== PROCESS IMPORTS ==================================
 from src.gateway.processGateway import processGateway
-# from src.hardware.camera.processCamera import processCamera
+from src.hardware.camera.processCamera import processCamera
 from src.hardware.serialhandler.processSerialHandler import processSerialHandler
 from src.utils.PCcommunicationDemo.processPCcommunication import (
     processPCCommunicationDemo,
@@ -62,10 +62,10 @@ queueList = {
 logging = logging.getLogger()
 
 TrafficCommunication = False
-Camera = False
+Camera = True
 PCCommunicationDemo = True
 CarsAndSemaphores = True
-SerialHandler = False
+SerialHandler = True
 Socket = True
 VehicleControl = True
 # ===================================== SETUP PROCESSES ==================================
