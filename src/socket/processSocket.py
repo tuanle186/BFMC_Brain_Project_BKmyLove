@@ -32,10 +32,11 @@ if __name__ == "__main__":
     sys.path.insert(0, "../..")
 
 from src.templates.workerprocess import WorkerProcess
-from src.socket.threads.threadSocket import threadClientSocket
+from src.socket.threads.threadSocketServer import Server
+# from socket.theads.threadSocketClient import threadClientSocket
 from multiprocessing import Pipe
 
-class processRecvSocket(WorkerProcess):
+class processSocket(WorkerProcess):
     """This process handle msg recv from server camera IP\n
        
     """
@@ -49,7 +50,7 @@ class processRecvSocket(WorkerProcess):
         self.pipeRecv = pipeRecv
         self.pipeSend = pipeSend
 
-        super(processRecvSocket, self).__init__(self.queuesList)
+        super(processSocket, self).__init__(self.queuesList)
     
     # ===================================== STOP ==========================================
     def stop(self):
@@ -57,18 +58,18 @@ class processRecvSocket(WorkerProcess):
         for thread in self.threads:
             thread.stop()
             thread.join()
-        super(processRecvSocket, self).stop()
+        super(processSocket, self).stop()
     
     
     # ===================================== RUN ==========================================
     def run(self):
         """Apply the initializing methods and start the threads."""
-        super(processRecvSocket, self).run()
+        super(processSocket, self).run()
 
     # ===================================== INIT TH ======================================
     def _init_threads(self):
         """Create the Socket Publisher thread and add to the list of threads."""
-        socketTh = threadClientSocket(self.queuesList, self.logging, self.debugging)
+        socketTh = Server(self.queuesList, self.logging, self.debugging)
         self.threads.append(socketTh)
 
 
@@ -94,11 +95,11 @@ if __name__ == "__main__":
     }
 
     logger = logging.getLogger()    
-    process = processRecvSocket(queueList, logger, debugg)
+    process = processSocket(queueList, logger, debugg)
     process.daemon = True
     process.start()
 
-    time.sleep(20)
+    time.sleep(100)
     #TODO#p
     # print("Runing")
 
