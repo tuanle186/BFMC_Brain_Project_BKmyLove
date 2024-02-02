@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Bosch Engineering Center Cluj and BFMC organizers
+    # Copyright (c) 2019, Bosch Engineering Center Cluj and BFMC organizers
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without

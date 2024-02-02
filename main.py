@@ -64,10 +64,10 @@ logging = logging.getLogger()
 TrafficCommunication = False
 Camera = True
 PCCommunicationDemo = True
-CarsAndSemaphores = True
+CarsAndSemaphores = False
 SerialHandler = True
-Socket = True
-VehicleControl = True
+Socket = False
+VehicleControl = False
 # ===================================== SETUP PROCESSES ==================================
 
 # Initializing gateway
