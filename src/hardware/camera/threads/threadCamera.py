@@ -30,8 +30,18 @@ import threading
 import base64
 import picamera2
 import time
+import socket
+
+import io
+import logging
+import socketserver
+from http import server
+from threading import Condition
+
 from picamera2.encoders import MJPEGEncoder
 from picamera2.outputs import FfmpegOutput
+from picamera2.encoders import MJPEGEncoder
+from picamera2.outputs import FileOutput
 
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
@@ -43,6 +53,76 @@ from src.utils.messages.allMessages import (
 )
 from src.templates.threadwithstop import ThreadWithStop
 
+PAGE = """\
+<html>
+<head>
+<title>picamera2 MJPEG streaming demo</title>
+</head>
+<body>
+<h1>Picamera2 MJPEG Streaming Demo</h1>
+<img src="stream.mjpg" width="640" height="480" />
+</body>
+</html>
+"""
+
+
+class StreamingOutput(io.BufferedIOBase):
+    def __init__(self):
+        self.frame = None
+        self.condition = Condition()
+
+    def write(self, buf):
+        with self.condition:
+            self.frame = buf
+            self.condition.notify_all()
+
+
+class StreamingHandler(server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/':
+            self.send_response(301)
+            self.send_header('Location', '/index.html')
+            self.end_headers()
+        elif self.path == '/index.html':
+            content = PAGE.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.send_header('Content-Length', len(content))
+            self.end_headers()
+            self.wfile.write(content)
+        elif self.path == '/stream.mjpg':
+            self.send_response(200)
+            self.send_header('Age', 0)
+            self.send_header('Cache-Control', 'no-cache, private')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+            self.end_headers()
+            try:
+                while True:
+                    with output.condition:
+                        output.condition.wait()
+                        frame = output.frame
+                    self.wfile.write(b'--FRAME\r\n')
+                    self.send_header('Content-Type', 'image/jpeg')
+                    self.send_header('Content-Length', len(frame))
+                    self.end_headers()
+                    self.wfile.write(frame)
+                    self.wfile.write(b'\r\n')
+            except Exception as e:
+                logging.warning(
+                    'Removed streaming client %s: %s',
+                    self.client_address, str(e))
+        else:
+            self.send_error(404)
+            self.end_headers()
+
+
+class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+encoder = MJPEGEncoder()
+output = StreamingOutput()
 
 class threadCamera(ThreadWithStop):
     """Thread which will handle camera functionalities.\n
@@ -63,7 +143,7 @@ class threadCamera(ThreadWithStop):
         self.pipeSendConfig = pipeSend
         self.debugger = debugger
         self.frame_rate = 5
-        self.recording = False
+        self.recording = True
         pipeRecvRecord, pipeSendRecord = Pipe(duplex=False)
         self.pipeRecvRecord = pipeRecvRecord
         self.pipeSendRecord = pipeSendRecord
@@ -106,8 +186,7 @@ class threadCamera(ThreadWithStop):
 
     # =============================== STOP ================================================
     def stop(self):
-        if self.recording:
-            self.video_writer.release()
+        self.camera.stop_encoder()
         super(threadCamera, self).stop()
 
     # =============================== CONFIG ==============================================
@@ -131,36 +210,10 @@ class threadCamera(ThreadWithStop):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
         var = True
         while self._running:
-            try:
-                if self.pipeRecvRecord.poll():
-                    msg = self.pipeRecvRecord.recv()
-                    self.recording = msg["value"]
-                    if msg["value"] == False:
-                        # self.video_writer.release()
-                        self.camera.stop_encoder()
-                    else:
-                        # fourcc = cv2.VideoWriter_fourcc(
-                        #     *"MJPG"
-                        # )  # You can choose different codecs, e.g., 'MJPG', 'XVID', 'H264', etc.
-                        # self.video_writer = cv2.VideoWriter(
-                        #     "output_video" + str(time.time()) + ".avi",
-                        #     fourcc,
-                        #     self.frame_rate,
-                        #     (2048, 1080),
-                        # )
-                        encoder = MJPEGEncoder(bitrate=10000000)
-                        output = "output_video" + str(time.time()) + ".mjpeg"
-                        #output = FfmpegOutput('test.mp4')
-                        self.camera.start_encoder(encoder, output)
-            except Exception as e:
-                print(e)
             if self.debugger == True:
                 self.logger.warning("getting image")
             request = self.camera.capture_array("main")
             if var:
-                # if self.recording == True:
-                #     cv2_image = cv2.cvtColor(request, cv2.COLOR_RGB2BGR)
-                #     self.video_writer.write(cv2_image)
                 request2 = self.camera.capture_array(
                     "lores"
                 )  # Will capture an array that can be used by OpenCV library
@@ -198,10 +251,20 @@ class threadCamera(ThreadWithStop):
         config = self.camera.create_video_configuration(
             buffer_count=5,
             queue=False,
-            main={"format": "XBGR8888", "size": (2048, 1080)},
-            # lores={"size": (480, 360)},
-            lores={"size": (720, 480)},
+            main={"format": "XBGR8888", "size": (640, 480)},
+            lores={"size": (640, 480)},
             encode="lores",
         )
         self.camera.configure(config)
         self.camera.start()
+        global encoder
+        global output
+        self.camera.start_encoder(encoder, FileOutput(output))
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create a socket object 
+        s.connect(("8.8.8.8", 80)) # Connect to an external server
+        local_ip = s.getsockname()[0] # Get the local IP address
+        address = (local_ip, 8000)
+        server = StreamingServer(address, StreamingHandler)
+        server.serve_forever()
+
+
