@@ -30,6 +30,7 @@ import threading
 import base64
 import picamera2
 import time
+import socket
 
 import io
 import logging
@@ -142,7 +143,7 @@ class threadCamera(ThreadWithStop):
         self.pipeSendConfig = pipeSend
         self.debugger = debugger
         self.frame_rate = 5
-        self.recording = False
+        self.recording = True
         pipeRecvRecord, pipeSendRecord = Pipe(duplex=False)
         self.pipeRecvRecord = pipeRecvRecord
         self.pipeSendRecord = pipeSendRecord
@@ -185,8 +186,7 @@ class threadCamera(ThreadWithStop):
 
     # =============================== STOP ================================================
     def stop(self):
-        if self.recording:
-            self.video_writer.release()
+        self.camera.stop_encoder()
         super(threadCamera, self).stop()
 
     # =============================== CONFIG ==============================================
@@ -210,21 +210,6 @@ class threadCamera(ThreadWithStop):
         """This function will run while the running flag is True. It captures the image from camera and make the required modifies and then it send the data to process gateway."""
         var = True
         while self._running:
-            try:
-                if self.pipeRecvRecord.poll():
-                    msg = self.pipeRecvRecord.recv()
-                    self.recording = msg["value"]
-                    if msg["value"] == False:
-                        self.camera.stop_recording()
-                    else:
-                        global encoder
-                        global output
-                        self.camera.start_recording(encoder, FileOutput(output))
-                        address = ('192.168.8.130', 8000)
-                        server = StreamingServer(address, StreamingHandler)
-                        server.serve_forever()
-            except Exception as e:
-                print(e)
             if self.debugger == True:
                 self.logger.warning("getting image")
             request = self.camera.capture_array("main")
@@ -267,11 +252,19 @@ class threadCamera(ThreadWithStop):
             buffer_count=5,
             queue=False,
             main={"format": "XBGR8888", "size": (640, 480)},
-            # lores={"size": (480, 360)},
             lores={"size": (640, 480)},
             encode="lores",
         )
         self.camera.configure(config)
         self.camera.start()
+        global encoder
+        global output
+        self.camera.start_encoder(encoder, FileOutput(output))
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create a socket object 
+        s.connect(("8.8.8.8", 80)) # Connect to an external server
+        local_ip = s.getsockname()[0] # Get the local IP address
+        address = (local_ip, 8000)
+        server = StreamingServer(address, StreamingHandler)
+        server.serve_forever()
 
 

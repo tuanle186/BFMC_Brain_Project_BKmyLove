@@ -63,7 +63,7 @@ logging = logging.getLogger()
 
 TrafficCommunication = False
 Camera = True
-PCCommunicationDemo = True
+PCCommunicationDemo = False
 CarsAndSemaphores = False
 SerialHandler = True
 Socket = True

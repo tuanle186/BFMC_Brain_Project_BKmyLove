@@ -2,7 +2,11 @@ import threading
 
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
-    LaneDetect
+    LaneDetect,
+    SpeedMotor,
+    SteerMotor,
+    Control,
+    Brake,
 )
 from src.templates.threadwithstop import ThreadWithStop
 
@@ -35,8 +39,32 @@ class ThreadVehicleControl(ThreadWithStop):
             try:
                 if self.pipeRecv.poll():
                     msg = self.pipeRecv.recv()
+                    self.queuesList[SpeedMotor.Queue.value].put(
+                        {
+                            "Owner": SpeedMotor.Owner.value,
+                            "msgID": SpeedMotor.msgID.value,
+                            "msgType": SpeedMotor.msgType.value,
+                            "msgValue": 10,
+                        }
+                    )
                     print(msg)
-                # Your logic for handling vehicle control goes here
+                    steerAngle = float(msg["value"])
+                    if steerAngle > 25:
+                        steerAngle = 25
+                    elif steerAngle < -25:
+                        steerAngle = -25
+                    elif -10 < steerAngle < 10:
+                        steerAngle = 0
+
+                    self.queuesList[SteerMotor.Queue.value].put(
+                        {
+                            "Owner": SteerMotor.Owner.value,
+                            "msgID": SteerMotor.msgID.value,
+                            "msgType": SteerMotor.msgType.value,
+                            "msgValue": steerAngle,
+                        }
+                    )
+                    
 
             except Exception as e:
                 print(e)
