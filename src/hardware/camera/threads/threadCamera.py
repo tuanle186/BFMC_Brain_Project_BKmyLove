@@ -260,9 +260,10 @@ class threadCamera(ThreadWithStop):
         global encoder
         global output
         self.camera.start_encoder(encoder, FileOutput(output))
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create a socket object 
-        s.connect(("8.8.8.8", 80)) # Connect to an external server
-        local_ip = s.getsockname()[0] # Get the local IP address
+        # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create a socket object 
+        # s.connect(("8.8.8.8", 80)) # Connect to an external server
+        # local_ip = s.getsockname()[0] # Get the local IP address
+        local_ip = '192.168.0.114'
         address = (local_ip, 8000)
         server = StreamingServer(address, StreamingHandler)
         server.serve_forever()

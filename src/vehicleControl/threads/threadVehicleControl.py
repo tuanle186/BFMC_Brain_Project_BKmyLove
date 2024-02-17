@@ -10,6 +10,23 @@ from src.utils.messages.allMessages import (
 )
 from src.templates.threadwithstop import ThreadWithStop
 
+class AverageCal:
+    def __init__(self, max_size=5):
+        self.max_size = max_size
+        self.data = []
+
+    
+    def add_element(self, new_element):
+        if len(self.data) == self.max_size:
+            self.data.pop()
+        self.data.insert(0, new_element)
+
+    
+    def calculate_average(self):
+        if not self.data:
+            return None
+        return sum(self.data) / len(self.data)    
+
 
 class ThreadVehicleControl(ThreadWithStop):
     def __init__(self, pipeRecv, pipeSend, queuesList, logger, debugger):
@@ -34,6 +51,7 @@ class ThreadVehicleControl(ThreadWithStop):
     def stop(self):
         super(ThreadVehicleControl, self).stop()
 
+
     def run(self):
         while self._running:
             try:
@@ -44,17 +62,16 @@ class ThreadVehicleControl(ThreadWithStop):
                             "Owner": SpeedMotor.Owner.value,
                             "msgID": SpeedMotor.msgID.value,
                             "msgType": SpeedMotor.msgType.value,
-                            "msgValue": 10,
+                            "msgValue": 30,
                         }
                     )
-                    print(msg)
-                    steerAngle = float(msg["value"])
-                    if steerAngle > 25:
+                    
+                    steerAngle = 1*float(msg["value"])
+                    if steerAngle > 20:
                         steerAngle = 25
-                    elif steerAngle < -25:
+                    elif steerAngle < -20:
                         steerAngle = -25
-                    elif -10 < steerAngle < 10:
-                        steerAngle = 0
+                    # else
 
                     self.queuesList[SteerMotor.Queue.value].put(
                         {

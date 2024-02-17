@@ -25,6 +25,12 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+
+if __name__ == "__main__":
+    import sys
+
+    sys.path.insert(0, "../../../..")
+
 import threading
 from multiprocessing import Pipe
 from src.hardware.serialhandler.threads.messageconverter import MessageConverter
@@ -78,7 +84,7 @@ class threadWrite(ThreadWithStop):
         if example:
             self.i = 0.0
             self.j = -1.0
-            self.s = 0.0
+            self.s = 30.0
             self.example()
 
     def subscribe(self):
@@ -217,13 +223,32 @@ class threadWrite(ThreadWithStop):
             self.pipeSendRunningSignal.send({"Type": "Run", "value": True})
             self.pipeSendSpeed.send({"Type": "Speed", "value": self.s})
             self.pipeSendSteer.send({"Type": "Steer", "value": self.i})
-            self.i += self.j
-            if self.i >= 21.0:
-                self.i = 21.0
-                self.s = self.i / 7
-                self.j *= -1
-            if self.i <= -21.0:
-                self.i = -21.0
-                self.s = self.i / 7
-                self.j *= -1.0
+            # self.i += self.j
+            # if self.i >= 21.0:
+            #     self.i = 21.0
+            #     self.s = self.i / 7
+            #     self.j *= -1
+            # if self.i <= -21.0:
+            #     self.i = -21.0
+            #     self.s = self.i / 7
+            #     self.j *= -1.0
             threading.Timer(0.01, self.example).start()
+    
+    # def parking(self):
+    #     """This function simulte the parking movement of the car."""
+    #     if self.exampleFlag:
+
+    #         self.pipeSendRunningSignal.send({"Type": "Run", "value": True})
+    #         self.pipeSendSpeed.send({"Type": "Speed", "value": self.s})
+    #         self.pipeSendSteer.send({"Type": "Steer", "value": self.i})
+    #         self.i += self.j
+    #         if self.i >= 21.0:
+    #             self.i = 21.0
+    #             self.s = self.i / 7
+    #             self.j *= -1
+    #         if self.i <= -21.0:
+    #             self.i = -21.0
+    #             self.s = self.i / 7
+    #             self.j *= -1.0
+    #         threading.Timer(0.01, self.example).start()
+    
