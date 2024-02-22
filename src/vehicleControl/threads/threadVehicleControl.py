@@ -1,4 +1,5 @@
 import threading
+import time
 
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
@@ -9,23 +10,6 @@ from src.utils.messages.allMessages import (
     Brake,
 )
 from src.templates.threadwithstop import ThreadWithStop
-
-class AverageCal:
-    def __init__(self, max_size=5):
-        self.max_size = max_size
-        self.data = []
-
-    
-    def add_element(self, new_element):
-        if len(self.data) == self.max_size:
-            self.data.pop()
-        self.data.insert(0, new_element)
-
-    
-    def calculate_average(self):
-        if not self.data:
-            return None
-        return sum(self.data) / len(self.data)    
 
 
 class ThreadVehicleControl(ThreadWithStop):
@@ -57,32 +41,74 @@ class ThreadVehicleControl(ThreadWithStop):
             try:
                 if self.pipeRecv.poll():
                     msg = self.pipeRecv.recv()
-                    self.queuesList[SpeedMotor.Queue.value].put(
-                        {
-                            "Owner": SpeedMotor.Owner.value,
-                            "msgID": SpeedMotor.msgID.value,
-                            "msgType": SpeedMotor.msgType.value,
-                            "msgValue": 30,
-                        }
-                    )
-                    
-                    steerAngle = 1*float(msg["value"])
-                    if steerAngle > 20:
-                        steerAngle = 25
-                    elif steerAngle < -20:
-                        steerAngle = -25
-                    # else
+                    if msg["value"] == "parking":
+                        print("threadParking is running")
 
-                    self.queuesList[SteerMotor.Queue.value].put(
-                        {
-                            "Owner": SteerMotor.Owner.value,
-                            "msgID": SteerMotor.msgID.value,
-                            "msgType": SteerMotor.msgType.value,
-                            "msgValue": steerAngle,
-                        }
-                    )
-                    
+                        message_values = [
+                            {"Speed": 45, "Time": 0.8, "Steer": -23},
+                            {"Speed": 40, "Time": 0.9, "Steer": 0},
+                            {"Speed": 40, "Time": 0.5, "Steer": 23},
+                            {"Speed": 0, "Time": 0.5, "Steer": -23},
+                            {"Speed": -45, "Time": 0.6, "Steer": -23},  
+                            {"Speed": 0, "Time": 2, "Steer": 0},
+                            {"Speed": -40, "Time": 0.5, "Steer": 0},
+                            {"Speed": 0, "Time": 1, "Steer": 23},
+                            {"Speed": 45, "Time": 0.8, "Steer": 23},
+                            {"Speed": 45, "Time": 1.3, "Steer": -23}
+                        ]
+                        #Parking slot in
+                        for msg_value in message_values:
+                            self.queuesList[Control.Queue.value].put(
+                                {
+                                    "Owner": Control.Owner.value,
+                                    "msgID": Control.msgID.value,
+                                    "msgType": Control.msgType.value,
+                                    "msgValue": msg_value,
+                                }
+                            )
+                            time.sleep(msg_value["Time"] + 0.1)
+                    else:
+                        self.queuesList[SpeedMotor.Queue.value].put(
+                            {
+                                "Owner": SpeedMotor.Owner.value,
+                                "msgID": SpeedMotor.msgID.value,
+                                "msgType": SpeedMotor.msgType.value,
+                                "msgValue": 30,
+                            }
+                        )
+                        
+                        steerAngle = 1*float(msg["value"])
+                        # if steerAngle > 60:
+                        #     steerAngle = 25
+                        # elif steerAngle < -60:
+                        #     steerAngle = -25
+                        # elif 40 < steerAngle < 60:
+                        #     steerAngle = 20
+                        # elif -60 < steerAngle < -40:
+                        #     steerAngle = -20
+                        # elif 20 < steerAngle < 40:
+                        #     steerAngle = 15
+                        # elif -40 < steerAngle < -20:
+                        #     steerAngle = -15
+                        # elif 0 < steerAngle < 20:
+                        #     steerAngle = 5
+                        # elif -20 < steerAngle < 0:
+                        #     steerAngle = -5
 
+                        if steerAngle > 20:
+                            steerAngle = 25
+                        elif steerAngle < -20:
+                            steerAngle = -25
+
+                        self.queuesList[SteerMotor.Queue.value].put(
+                            {
+                                "Owner": SteerMotor.Owner.value,
+                                "msgID": SteerMotor.msgID.value,
+                                "msgType": SteerMotor.msgType.value,
+                                "msgValue": steerAngle,
+                            }
+                        )
+                    
             except Exception as e:
                 print(e)
 

@@ -8,7 +8,6 @@ if __name__ == "__main__":
     sys.path.insert(0, "../..")
 from src.templates.workerprocess import WorkerProcess
 from src.vehicleControl.threads.threadVehicleControl import ThreadVehicleControl
-from src.vehicleControl.threads.threadsParking import ThreadParking
 from multiprocessing import Pipe
 
 class processVehicleControl(WorkerProcess):
@@ -48,11 +47,7 @@ class processVehicleControl(WorkerProcess):
         vehicleControlThread = ThreadVehicleControl(
             self.pipeRecv, self.pipeSend, self.queuesList, self.logging, self.debugging
         )
-        parkingThread = ThreadParking(
-            self.pipeRecv, self.pipeSend, self.queuesList, self.logging, self.debugging
-        )
-        # self.threads.append(vehicleControlThread)
-        self.threads.append(parkingThread)
+        self.threads.append(vehicleControlThread)
         
 
 
@@ -78,5 +73,5 @@ if __name__ == "__main__":
     process = processVehicleControl(queueList, logger, debugg)
     process.daemon = True
     process.start()
-    time.sleep(20)
+    time.sleep(10)
     process.stop
