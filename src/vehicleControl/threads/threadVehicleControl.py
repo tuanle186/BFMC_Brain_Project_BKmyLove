@@ -41,9 +41,9 @@ class ThreadVehicleControl(ThreadWithStop):
             try:
                 if self.pipeRecv.poll():
                     msg = self.pipeRecv.recv()
+                    # Parking
                     if msg["value"] == "parking":
-                        print("threadParking is running")
-
+                        print("Parking is activated")
                         message_values = [
                             {"Speed": 45, "Time": 0.8, "Steer": -23},
                             {"Speed": 40, "Time": 0.9, "Steer": 0},
@@ -56,7 +56,6 @@ class ThreadVehicleControl(ThreadWithStop):
                             {"Speed": 45, "Time": 0.8, "Steer": 23},
                             {"Speed": 45, "Time": 1.3, "Steer": -23}
                         ]
-                        #Parking slot in
                         for msg_value in message_values:
                             self.queuesList[Control.Queue.value].put(
                                 {
@@ -73,32 +72,42 @@ class ThreadVehicleControl(ThreadWithStop):
                                 "Owner": SpeedMotor.Owner.value,
                                 "msgID": SpeedMotor.msgID.value,
                                 "msgType": SpeedMotor.msgType.value,
-                                "msgValue": 30,
+                                "msgValue": 40,
                             }
                         )
                         
                         steerAngle = 1*float(msg["value"])
-                        # if steerAngle > 60:
-                        #     steerAngle = 25
-                        # elif steerAngle < -60:
-                        #     steerAngle = -25
-                        # elif 40 < steerAngle < 60:
-                        #     steerAngle = 20
-                        # elif -60 < steerAngle < -40:
-                        #     steerAngle = -20
-                        # elif 20 < steerAngle < 40:
-                        #     steerAngle = 15
-                        # elif -40 < steerAngle < -20:
-                        #     steerAngle = -15
-                        # elif 0 < steerAngle < 20:
-                        #     steerAngle = 5
-                        # elif -20 < steerAngle < 0:
-                        #     steerAngle = -5
 
-                        if steerAngle > 20:
-                            steerAngle = 25
-                        elif steerAngle < -20:
-                            steerAngle = -25
+                        # Turning
+                        if steerAngle > 37:
+                            steerAngle = 23
+                        elif steerAngle < -37:
+                            steerAngle = -23
+
+                        elif 35 < steerAngle <= 37:
+                            steerAngle = 14
+                        elif -37 <= steerAngle < -35:
+                            steerAngle = -14
+
+                        elif 33 < steerAngle <= 35:
+                            steerAngle = 12
+                        elif -35 <= steerAngle < -33:
+                            steerAngle = -12
+
+                        elif 31 < steerAngle <= 33:
+                            steerAngle = 10
+                        elif -33 <= steerAngle < -31:
+                            steerAngle = -10
+
+                        elif 30 < steerAngle < 37:
+                            steerAngle = 8
+                        elif -37 < steerAngle < -30:
+                            steerAngle = -8
+
+                        elif  15 < steerAngle <= 30:
+                            steerAngle = 6
+                        elif -30 <= steerAngle < -15:
+                            steerAngle = -6
 
                         self.queuesList[SteerMotor.Queue.value].put(
                             {
