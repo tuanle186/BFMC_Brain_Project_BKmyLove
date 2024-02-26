@@ -8,6 +8,7 @@ from src.utils.messages.allMessages import (
     Recording,
     Record,
     Config,
+    Control,
     LaneDetect
 )
 class Server(ThreadWithStop):
@@ -45,16 +46,16 @@ class Server(ThreadWithStop):
     def server_recv(self, server_socket, ip):
         while True:
             try:
-                data = server_socket.recv(1024).decode("utf-8").strip()
-                if not data:
+                control_signal = server_socket.recv(1024).strip().decode("utf-8")
+                if not control_signal:
                     break
-                # print(data)
+                print(control_signal)
                 self.queueList["Critical"].put(
                     {
                         "Owner": LaneDetect.Owner.value,
                         "msgID": LaneDetect.msgID.value,
                         "msgType": LaneDetect.msgType.value,
-                        "msgValue": data,
+                        "msgValue": control_signal,
                     }
                 )
             except ConnectionResetError:

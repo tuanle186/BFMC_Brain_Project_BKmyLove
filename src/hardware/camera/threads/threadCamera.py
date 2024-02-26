@@ -124,6 +124,27 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
 encoder = MJPEGEncoder()
 output = StreamingOutput()
 
+
+def get_local_ip():
+    try:
+        # Create a socket object
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        
+        # Connect to a remote server (doesn't have to be reachable)
+        s.connect(("8.8.8.8", 80))
+        
+        # Get the local IP address
+        local_ip = s.getsockname()[0]
+        
+        # Close the socket
+        s.close()
+        
+        return local_ip
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+
 class threadCamera(ThreadWithStop):
     """Thread which will handle camera functionalities.\n
     Args:
@@ -260,9 +281,7 @@ class threadCamera(ThreadWithStop):
         global encoder
         global output
         self.camera.start_encoder(encoder, FileOutput(output))
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Create a socket object 
-        s.connect(("8.8.8.8", 80)) # Connect to an external server
-        local_ip = s.getsockname()[0] # Get the local IP address
+        local_ip = get_local_ip()
         address = (local_ip, 8000)
         server = StreamingServer(address, StreamingHandler)
         server.serve_forever()

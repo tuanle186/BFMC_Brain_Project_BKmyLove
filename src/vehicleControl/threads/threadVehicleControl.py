@@ -1,4 +1,5 @@
 import threading
+import time
 
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
@@ -34,38 +35,89 @@ class ThreadVehicleControl(ThreadWithStop):
     def stop(self):
         super(ThreadVehicleControl, self).stop()
 
+
     def run(self):
         while self._running:
             try:
                 if self.pipeRecv.poll():
                     msg = self.pipeRecv.recv()
-                    self.queuesList[SpeedMotor.Queue.value].put(
-                        {
-                            "Owner": SpeedMotor.Owner.value,
-                            "msgID": SpeedMotor.msgID.value,
-                            "msgType": SpeedMotor.msgType.value,
-                            "msgValue": 10,
-                        }
-                    )
-                    print(msg)
-                    steerAngle = float(msg["value"])
-                    if steerAngle > 25:
-                        steerAngle = 25
-                    elif steerAngle < -25:
-                        steerAngle = -25
-                    elif -10 < steerAngle < 10:
-                        steerAngle = 0
+                    # Parking
+                    if msg["value"] == "parking":
+                        print("Parking is activated")
+                        message_values = [
+                            {"Speed": 45, "Time": 0.8, "Steer": -23},
+                            {"Speed": 40, "Time": 0.9, "Steer": 0},
+                            {"Speed": 40, "Time": 0.5, "Steer": 23},
+                            {"Speed": 0, "Time": 0.5, "Steer": -23},
+                            {"Speed": -45, "Time": 0.6, "Steer": -23},  
+                            {"Speed": 0, "Time": 2, "Steer": 0},
+                            {"Speed": -40, "Time": 0.5, "Steer": 0},
+                            {"Speed": 0, "Time": 1, "Steer": 23},
+                            {"Speed": 45, "Time": 0.8, "Steer": 23},
+                            {"Speed": 45, "Time": 1.3, "Steer": -23}
+                        ]
+                        for msg_value in message_values:
+                            self.queuesList[Control.Queue.value].put(
+                                {
+                                    "Owner": Control.Owner.value,
+                                    "msgID": Control.msgID.value,
+                                    "msgType": Control.msgType.value,
+                                    "msgValue": msg_value,
+                                }
+                            )
+                            time.sleep(msg_value["Time"] + 0.1)
+                    else:
+                        self.queuesList[SpeedMotor.Queue.value].put(
+                            {
+                                "Owner": SpeedMotor.Owner.value,
+                                "msgID": SpeedMotor.msgID.value,
+                                "msgType": SpeedMotor.msgType.value,
+                                "msgValue": 40,
+                            }
+                        )
+                        
+                        steerAngle = 1*float(msg["value"])
 
-                    self.queuesList[SteerMotor.Queue.value].put(
-                        {
-                            "Owner": SteerMotor.Owner.value,
-                            "msgID": SteerMotor.msgID.value,
-                            "msgType": SteerMotor.msgType.value,
-                            "msgValue": steerAngle,
-                        }
-                    )
+                        # Turning
+                        if steerAngle > 37:
+                            steerAngle = 23
+                        elif steerAngle < -37:
+                            steerAngle = -23
+
+                        elif 35 < steerAngle <= 37:
+                            steerAngle = 14
+                        elif -37 <= steerAngle < -35:
+                            steerAngle = -14
+
+                        elif 33 < steerAngle <= 35:
+                            steerAngle = 12
+                        elif -35 <= steerAngle < -33:
+                            steerAngle = -12
+
+                        elif 31 < steerAngle <= 33:
+                            steerAngle = 10
+                        elif -33 <= steerAngle < -31:
+                            steerAngle = -10
+
+                        elif 30 < steerAngle < 37:
+                            steerAngle = 8
+                        elif -37 < steerAngle < -30:
+                            steerAngle = -8
+
+                        elif  15 < steerAngle <= 30:
+                            steerAngle = 6
+                        elif -30 <= steerAngle < -15:
+                            steerAngle = -6
+
+                        self.queuesList[SteerMotor.Queue.value].put(
+                            {
+                                "Owner": SteerMotor.Owner.value,
+                                "msgID": SteerMotor.msgID.value,
+                                "msgType": SteerMotor.msgType.value,
+                                "msgValue": steerAngle,
+                            }
+                        )
                     
-
             except Exception as e:
                 print(e)
 

@@ -48,6 +48,7 @@ class processVehicleControl(WorkerProcess):
             self.pipeRecv, self.pipeSend, self.queuesList, self.logging, self.debugging
         )
         self.threads.append(vehicleControlThread)
+        
 
 
 # =================================== EXAMPLE =========================================
@@ -72,5 +73,5 @@ if __name__ == "__main__":
     process = processVehicleControl(queueList, logger, debugg)
     process.daemon = True
     process.start()
-    time.sleep(20)
+    time.sleep(10)
     process.stop
