@@ -1,6 +1,6 @@
 import socket, threading
 from multiprocessing import Pipe
-
+import select
 from src.templates.threadwithstop import ThreadWithStop
 from src.utils.messages.allMessages import (
     mainCamera,
@@ -64,7 +64,10 @@ class Server(ThreadWithStop):
         del self.client_connections[ip]
         print(f"Client {ip} disconnected")
         server_socket.close()
-
+    
+    def delay(self, server_socket, add):
+        socket.settimeout(5)
+        
     def handle_client(self, server_socket, addr):
         ip = addr[0]
         print(f'Connected to {addr}')
@@ -75,6 +78,10 @@ class Server(ThreadWithStop):
     def close_connections(self):
         for client_socket in self.client_connections.values():
             client_socket.close()
+
+    def stop(self):
+        self.close_connections()
+        super(Server, self).stop()
 
 if __name__ == "__main__":
     server = Server()
